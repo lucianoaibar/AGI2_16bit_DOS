@@ -1,0 +1,9 @@
+@echo off
+
+set NASM=D:\dev_bin\nasm
+set WATCOM=D:\dev_bin\watcom
+
+set WLINK_LNK=%WATCOM%\wlink.txt
+set BIN=%WATCOM%\bin
+set INCLUDE=%WATCOM%\include
+set LIB=%WATCOM%\lib;%WATCOM%\lib\dos
