@@ -28,6 +28,7 @@ They employed it in 14 of their games between 1984 and 1989, before replacing it
 * [Adventure Game Interpreter - Wikipedia](https://en.wikipedia.org/wiki/Adventure_Game_Interpreter)
 * [AGI - ScummVM wiki](https://wiki.scummvm.org/index.php?title=AGI)
 * [AGI Studio Documents - Sierra Help](http://agi.sierrahelp.com/Documentation/index.html)
+* [Sierra's AGI Evolution](http://nerdlypleasures.blogspot.com/2012/09/sierras-agi-evolution.html)
 
 ## Setup
 
