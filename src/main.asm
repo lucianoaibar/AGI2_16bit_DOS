@@ -35,24 +35,19 @@ BITS 16
 CPU 286
 
 GLOBAL _small_code_
+EXTERN _DecryptUsingAvisDurgan
 
 
 SEGMENT _TEXT USE16 CLASS=CODE ALIGN=16
 _small_code_:
 ..start:
-	cli
 	mov ax, SEG AGIDATA		; CS + 0x9b6
 	mov ds,ax
 	mov [0x162b],ax
 	mov [0x162d],es
 	mov es,ax
-	add ax, 0x1c9			; CS + 0x9b6 + 0x1C9
-	mov [0x1627],ax
-	mov ss,ax
-	mov sp,0x1000
-	sti
+	mov [0x1627],ss
 
-;_78:
 	; call _C4
 	; call _3FE2
 	mov word [0x10c4], 0		; HACK
@@ -60,10 +55,16 @@ _small_code_:
 	call _40C2					; HACK
 
 	; Alloc de 0xa00 bytes para stack
-	mov word [bp-0x2],0xa00
-	push word [bp-0x2]
+	;mov ax, ss
+	;mov si, ds
+	;sub ax, si
+	;shl ax, 4
+	;add ax, 0x600
+
+	push word 0xa00
 	call LocalAlloc
 	add sp,byte +0x2
+
 	mov [0x0],ax			; WORD address que guardo en [DS:0] (AX = 0x1CA0)
 	mov si,ax
 	mov al,0x73
@@ -964,39 +965,39 @@ _776:
 ;------------------------------------------------------------------------------
 ; Decrypt using "Avis Durgan" as dictionary
 ; * object
-DecryptUsingAvisDurgan:		; 0x778
-	push si
-	push di
-	push bp
-	mov bp,sp
-	sub sp,byte +0x2
-	mov si,[bp+0x8]			; from address
-	mov di,0x8d7			; "Avis Durgan"
-_786:
-	mov ax,[bp+0xa]			; to address
-	cmp ax,si
-	jna short _7A9
-	cmp byte [di],0x0		; end of dictionary string ?
-	jnz short _795
-	mov di,0x8d7			; "Avis Durgan"
-_795:
-	mov ax,si
-	inc si
-	mov [bp-0x2],ax
-	mov bx,di
-	inc di
-	mov al,[bx]
-	sub ah,ah
-	mov bx,[bp-0x2]
-;_7A5:
-	xor [bx],al
-	jmp short _786
-_7A9:
-	mov sp,bp
-	pop bp
-	pop di
-	pop si
-	ret
+;DecryptUsingAvisDurgan:		; 0x778
+;	push si
+;	push di
+;	push bp
+;	mov bp,sp
+;	sub sp,byte +0x2
+;	mov si,[bp+0x8]			; from address
+;	mov di,0x8d7			; "Avis Durgan"
+;_786:
+;	mov ax,[bp+0xa]			; to address
+;	cmp ax,si
+;	jna short _7A9			; while
+;	cmp byte [di],0x0		; end of dictionary string ?
+;	jnz short _795
+;	mov di,0x8d7			; "Avis Durgan"
+;_795:
+;	mov ax,si				; from
+;	inc si
+;	mov [bp-0x2],ax
+;	mov bx,di				; "Avis Durgan"
+;	inc di
+;	mov al,[bx]
+;	sub ah,ah
+;	mov bx,[bp-0x2]
+;;_7A5:
+;	xor [bx],al
+;	jmp short _786
+;_7A9:
+;	mov sp,bp
+;	pop bp
+;	pop di
+;	pop si
+;	ret
 
 	DB	0x0
 
@@ -2048,7 +2049,7 @@ _F86:
 	add ax,[0xeb0]
 	push ax
 	push word [0x957]
-	call DecryptUsingAvisDurgan			; object
+	call _DecryptUsingAvisDurgan
 	add sp,byte +0x4
 	mov ax,[0xeb0]
 	add ax,0xfffd
@@ -2184,6 +2185,7 @@ _10D8:
 	pop di
 	pop si
 	ret
+
 _10DC:
 	push si
 	push di
@@ -2343,7 +2345,7 @@ _1181:
 	add ax,cx
 	push ax
 ;_1210:
-	call DecryptUsingAvisDurgan
+	call _DecryptUsingAvisDurgan
 	add sp,byte +0x4
 _1216:
 	mov ax,[bp-0x4]
@@ -6502,6 +6504,7 @@ _33E7:
 	pop di
 	pop si
 	ret
+
 _33ED:
 	push si
 	push di
@@ -19621,7 +19624,7 @@ AGIDATA_8C3:
 	DB	0x04, 0x04, 0x00, 0x00, 0x00, 0x04, 0x01, 0x01, 0x01, 0x00, 0x04, 0x03, 0x00
 	DB	0x00, 0x00, 0x02, 0x01, 0x01, 0x01, 0x00
 	
-	DB	"Avis Durgan", 0
+	DB	"Avis Durgan", 0		; TO-DO: remove
 	
 AGIDATA_8E3:
 	DW	_9A5, 0x0000
@@ -20003,3 +20006,6 @@ AGIDATA_1552:
 	DB	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	DB	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	DB	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+
+SEGMENT _STACK CLASS=STACK ALIGN=16
+

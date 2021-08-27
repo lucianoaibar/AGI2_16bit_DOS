@@ -1,5 +1,5 @@
 build_config.cmd
-build/C/AGI2.EXE
+build/C/*.com
 build/stderr.txt
 build/stdout.txt
 tmp
