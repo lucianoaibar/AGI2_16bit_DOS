@@ -3,8 +3,8 @@
 This is a custom & fully working version of **AGI 2.440** for DOS (16-bit).\
 The assembly source code is the result of the debugging, decryption, decompilation, analysis and refactoring of the following files from "Leisure Suit Larry in the Land of the Lounge Lizards":
 
-* Play.com
-* Larry.exe
+* Sierra.com
+* AGI
 * Agidata.ovl
 * hgc_font
 * EGA video driver
