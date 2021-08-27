@@ -13,7 +13,6 @@
 ; AGIDATA:
 ;    0	WORD		offset base para SP de stack de INT1C_SystemTimerTick (luego le agrega +0xa00)
 ;  a2d	WORD		Cantidad en bytes de memoria ocupada en AGIDATA (utilida por LocalAlloc)
-;  a2d	WORD		Lo mismo que a2d ???
 ; 10c0	WORD		Size en paragraphs SS - DS(original)
 ; 10c2	WORD		Size en paragraphs de ?
 ; 10c4	WORD		Video adapter? -1=indefinido, 1=?, 2=TandyLogic
@@ -32,43 +31,25 @@
 ; 1727	WORD		Previous video mode (0x3)
 ; 1b5a	WORD		?
 
-	BITS 16
-	CPU 286
+BITS 16
+CPU 286
 
-	SEGMENT CODE
-	
-	OFFSET_AGIDATA			equ		0x9B60
+GLOBAL _small_code_
 
+
+SEGMENT _TEXT USE16 CLASS=CODE ALIGN=16
+_small_code_:
 ..start:
 	cli
-	mov bx, ds
-	mov ax, cs
-	mov ds, ax
-	add ax, (OFFSET_AGIDATA >> 4) - 0x9B6
-	
-	add [_A3 + 1], ax		; + 0x9b6
-	add [_4100 + 2], ax		; + 0x9b6
-	add [_4115 + 1], ax		; + 0x9b6
-	add [_5CA7 + 1], ax		; + 0x9b6
-	add [_5E4B + 1], ax		; + 0x9b6
-	add [_6539 + 1], ax		; + 0xb7f
-	add [_6541 + 1], ax		; + 0x9b6
-	add [_81BD + 1], ax		; + 0x9b6
-	add [_81F0 + 1], ax		; + 0x9b6
-	add [_8222 + 1], ax		; + 0x9b6
-	add [_8258 + 1], ax		; + 0x9b6
-
-_6539:
-	mov ax,0xb7f
-	mov ss,ax
-	mov sp,0x1000
-_6541:
-	mov ax,0x9b6
+	mov ax, SEG AGIDATA		; CS + 0x9b6
 	mov ds,ax
 	mov [0x162b],ax
 	mov [0x162d],es
-	mov [0x1627],ss
 	mov es,ax
+	add ax, 0x1c9			; CS + 0x9b6 + 0x1C9
+	mov [0x1627],ax
+	mov ss,ax
+	mov sp,0x1000
 	sti
 
 ;_78:
@@ -83,7 +64,7 @@ _6541:
 	push word [bp-0x2]
 	call LocalAlloc
 	add sp,byte +0x2
-	mov [0x0],ax
+	mov [0x0],ax			; WORD address que guardo en [DS:0] (AX = 0x1CA0)
 	mov si,ax
 	mov al,0x73
 	mov di,si
@@ -92,12 +73,10 @@ _6541:
 	mov word [si],0xaaaa
 	add si,0xa00
 	cli
-_A3:
-	mov ax,0x9b6
+	mov ax, SEG AGIDATA
 	mov ss,ax
 	mov sp,si
 	sti
-	; jmp _11D
 
 ;_11D:
 	push si
@@ -370,7 +349,8 @@ _2BA:
 	shl bx,1
 	push si
 ;_2C3:
-	call [bx + AGIDATA_61B - AGIDATA]			; long table with CS:address
+	;call [bx + AGIDATA_61B - AGIDATA]			; long table with CS:address
+	call [bx + AGIDATA_61B]			; long table with CS:address
 	add sp,byte +0x2
 	mov si,ax
 	or si,si
@@ -1054,7 +1034,6 @@ _7F0:
 	mov bl,al
 	lodsb
 	cmp al,[bx+0x9]
-	nop
 	mov al,0x0
 	jnz short _800
 	inc al
@@ -1066,11 +1045,9 @@ _801:
 	xor bh,bh
 	mov bl,al
 	mov ah,[bx+0x9]
-	nop
 	lodsb
 	mov bl,al
 	xor al,al
-	nop
 	cmp ah,[bx+0x9]
 	jnz short _817
 	inc al
@@ -1082,7 +1059,6 @@ _818:
 	xor bh,bh
 	mov bl,al
 	lodsb
-	nop
 	cmp [bx+0x9],al
 	mov al,0x0
 	jnc short _828
@@ -1095,11 +1071,9 @@ _829:
 	xor bh,bh
 	mov bl,al
 	mov ah,[bx+0x9]
-	nop
 	lodsb
 	mov bl,al
 	xor al,al
-	nop
 	cmp ah,[bx+0x9]
 	jnc short _83F
 	inc al
@@ -1111,7 +1085,6 @@ _840:
 	xor bh,bh
 	mov bl,al
 	lodsb
-	nop
 	cmp [bx+0x9],al
 	mov al,0x0
 	jna short _850
@@ -1124,11 +1097,9 @@ _851:
 	xor bh,bh
 	mov bl,al
 	mov ah,[bx+0x9]
-	nop
 	lodsb
 	mov bl,al
 	xor al,al
-	nop
 	cmp ah,[bx+0x9]
 	jna short _867
 	inc al
@@ -1144,7 +1115,6 @@ _86D:
 	lodsb
 	xor bh,bh
 	mov bl,al
-	nop
 	mov al,[bx+0x9]
 	call _7265
 	ret
@@ -1166,7 +1136,6 @@ _892:
 _893:
 	call _8E7
 	jmp short _8BD
-	nop
 
 _899:
 	call _8E7
@@ -1175,7 +1144,6 @@ _899:
 	add dh,al
 	mov ch,dh
 	jmp short _8BD
-	nop
 
 _8A8:
 	call _8E7
@@ -1183,7 +1151,6 @@ _8A8:
 	dec dh
 	mov ch,dh
 	jmp short _8BD
-	nop
 
 _8B5:
 	call _8E7
@@ -1195,21 +1162,18 @@ _8BD:
 	jnc short _8C8
 	add si,byte +0x3
 	jmp short _8E4
-	nop
 _8C8:
 	lodsb
 	cmp dl,al
 	jnc short _8D3
 	add si,byte +0x2
 	jmp short _8E4
-	nop
 _8D3:
 	lodsb
 	cmp ch,al
 	jna short _8DC
 	inc si
 	jmp short _8E4
-	nop
 _8DC:
 	lodsb
 	cmp dl,al
@@ -1250,7 +1214,6 @@ _908:
 	xor bh,bh
 	mov bl,al
 	xor al,al
-	nop
 	cmp ah,[bx+0x9]
 	jnz short _928
 	inc al
@@ -2279,7 +2242,6 @@ _1126:
 	mov al,[di]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	sub ah,ah
 	push ax
@@ -2432,7 +2394,6 @@ _124D:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	push ax
@@ -3068,7 +3029,6 @@ _1738:
 	mov al,[di]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	sub ah,ah
 	push ax
@@ -3638,7 +3598,6 @@ _1BEC:
 	mov al,[di]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	sub ah,ah
 	push ax
@@ -3684,7 +3643,6 @@ _1C34:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	mov di,ax
@@ -4160,7 +4118,6 @@ _2061:
 	add sp,byte +0x4
 	mov si,ax
 	mov bx,[bp-0x8]
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	push ax
@@ -4194,7 +4151,6 @@ _20B1:
 	add sp,byte +0x4
 	mov si,ax
 	mov bx,[bp-0x8]
-	nop
 	mov al,[bx+0x9]
 	mov [bp-0xe],al
 	mov al,[bp-0xe]
@@ -4421,7 +4377,6 @@ _226A:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	mov di,ax
@@ -4430,7 +4385,6 @@ _226A:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	push ax
@@ -4444,7 +4398,6 @@ _226A:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	push ax
@@ -4557,25 +4510,21 @@ _2375:
 	jnz short _2380
 	call _2407
 	jmp short _23B3
-	nop
 _2380:
 	cmp al,0x64
 	jnz short _238A
 	call _23C6
 	jmp short _23B3
-	nop
 _238A:
 	cmp al,0x75
 	jnz short _2394
 	call _23E5
 	jmp short _23B3
-	nop
 _2394:
 	cmp al,0x78
 	jnz short _239E
 	call _23F6
 	jmp short _23B3
-	nop
 _239E:
 	cmp al,0x63
 	jnz short _23AD
@@ -4583,7 +4532,6 @@ _239E:
 	add bx,byte +0x2
 	call _2421
 	jmp short _23B3
-	nop
 _23AD:
 	mov al,0x25
 	call _2421
@@ -5626,7 +5574,6 @@ _2BFA:
 	mov al,[bx]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	mov [0xe44],al
 	mov bx,si
@@ -5634,7 +5581,6 @@ _2BFA:
 	mov al,[bx]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	mov [0xe45],al
 	mov bx,si
@@ -5642,7 +5588,6 @@ _2BFA:
 	mov al,[bx]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	mov [0xe46],al
 	mov bx,si
@@ -5650,7 +5595,6 @@ _2BFA:
 	mov al,[bx]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	mov [0xe47],al
 	mov bx,si
@@ -5658,7 +5602,6 @@ _2BFA:
 	mov al,[bx]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	mov [0xe48],al
 	mov bx,si
@@ -5666,7 +5609,6 @@ _2BFA:
 	mov al,[bx]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	mov [0xe49],al
 	mov di,si
@@ -5674,7 +5616,6 @@ _2BFA:
 	mov al,[di]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	sub ah,ah
 	mov cl,0x4
@@ -7221,7 +7162,6 @@ _3900:
 	mov al,[di]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	sub ah,ah
 	push ax
@@ -7341,7 +7281,6 @@ _39DB:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	push ax
@@ -7453,7 +7392,6 @@ _3AAB:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	push ax
@@ -7597,7 +7535,6 @@ _3BBC:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	push ax
@@ -7738,7 +7675,6 @@ _3CCF:
 	sub ah,ah
 	mov bx,ax
 	mov ax,di
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	mov sp,bp
@@ -7770,7 +7706,6 @@ _3D1D:
 	sub ah,ah
 	mov bx,ax
 	mov ax,di
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	pop bp
@@ -7801,7 +7736,6 @@ _3D55:
 	sub ah,ah
 	mov bx,ax
 	mov ax,di
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	pop bp
@@ -7832,7 +7766,6 @@ _3D8D:
 	sub ah,ah
 	mov bx,ax
 	mov ax,di
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	pop bp
@@ -7863,7 +7796,6 @@ _3DC5:
 	sub ah,ah
 	mov bx,ax
 	mov ax,di
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	pop bp
@@ -7901,7 +7833,6 @@ _3E19:
 	mov al,[di]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	sub ah,ah
 	push ax
@@ -8008,12 +7939,10 @@ _3EEA:
 	mov bx,0x1000
 	mov cx,0x8000
 	jmp short _3EFD
-	nop
 _3EF5:
 	mov bx,0x500
 	xor cx,cx
 	jmp short _3EFD
-	nop
 _3EFD:
 	mov al,0xb6
 	out 0x43,al
@@ -8178,8 +8107,7 @@ _3FB6:
 ;	jnz short _4036					; si salta
 ;	mov word [0x10c4],0x1
 ;	jmp short _4055
-;	nop
-;_4036:
+;;_4036:
 ;	mov di,0xc000
 ;_4039:
 ;	lea si,[0x10d1]					; "TandyLogic"
@@ -8279,8 +8207,7 @@ _40C2:
 	int 0x21
 	pop es
 	mov bx,0x1000
-_4100:
-	add bx,0x9b6
+	add bx, SEG AGIDATA
 	sub bx,[0x1627]
 	mov [0x10c2],bx
 	mov ah,0x48
@@ -8288,7 +8215,7 @@ _4100:
 	jnc short _4115
 	jmp _41E3
 _4115:
-	sub ax,0x9b6
+	sub ax, SEG AGIDATA
 	mov cl,0x4
 	shl ax,cl
 	mov [0xa2d],ax
@@ -8322,7 +8249,6 @@ _4155:
 	int 0x21
 	jnc short _4167
 	jmp short _41E3
-	nop
 _4167:
 	mov [0x1309],ax
 	mov word [bp-0x2],0x0
@@ -8344,7 +8270,6 @@ _4167:
 	call _2353
 	add sp,byte +0x2
 	jmp short _41F5
-	nop
 _419D:
 	push ax
 	mov word [bp-0x2],0xc00
@@ -8425,6 +8350,7 @@ _4201:
 	pop di
 	pop si
 	ret
+
 _424A:
 	push si
 	push di
@@ -8447,6 +8373,7 @@ _4269:
 	pop di
 	pop si
 	ret
+
 _426D:
 	push si
 	push di
@@ -8474,6 +8401,7 @@ _429B:
 	pop di
 	pop si
 	ret
+
 _42A1:
 	push si
 	push di
@@ -8501,6 +8429,7 @@ _42CF:
 	pop di
 	pop si
 	ret
+
 _42D5:
 	push si
 	push di
@@ -8528,6 +8457,7 @@ _4303:
 	pop di
 	pop si
 	ret
+
 _4309:
 	push si
 	push di
@@ -8555,6 +8485,7 @@ _4337:
 	pop di
 	pop si
 	ret
+
 _433D:
 	push si
 	push di
@@ -8582,8 +8513,8 @@ _433D:
 
 	DB	0x0
 _436D:
-	DB	0x3
-	DB	0x0
+	DW	3
+
 _436F:
 	push si
 	push di
@@ -8595,6 +8526,7 @@ _436F:
 	pop di
 	pop si
 	ret
+
 _437E:
 	push si
 	push di
@@ -8609,6 +8541,7 @@ _437E:
 	pop di
 	pop si
 	ret
+
 _4396:
 	push si
 	push di
@@ -8620,6 +8553,7 @@ _4396:
 	pop di
 	pop si
 	ret
+
 _43A5:
 	push si
 	push di
@@ -8678,6 +8612,7 @@ _441F:
 	pop di
 	pop si
 	ret
+
 _4425:
 	push si
 	push di
@@ -8710,6 +8645,7 @@ _445A:
 	pop di
 	pop si
 	ret
+
 _4462:
 	push si
 	push di
@@ -8741,6 +8677,7 @@ _4494:
 	pop di
 	pop si
 	ret
+
 _449A:
 	push si
 	push di
@@ -9103,7 +9040,6 @@ _4731:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov byte [bx+0x9],0xff
 	jmp short _47A2
 _4744:
@@ -9143,7 +9079,6 @@ _4744:
 _479B:
 	mov ax,[bp-0x2]
 _479E:
-	nop
 	mov [bx+0x9],al
 _47A2:
 	mov ax,[bp+0x8]
@@ -9357,7 +9292,6 @@ _4912:
 	mov al,[di]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	sub ah,ah
 	push ax
@@ -9436,7 +9370,6 @@ _49A6:
 	mov al,[di]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	sub ah,ah
 	push ax
@@ -9495,7 +9428,6 @@ _4A13:
 	mov al,[di]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	sub ah,ah
 	push ax
@@ -9573,7 +9505,6 @@ _4AA6:
 	mov al,[di]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	sub ah,ah
 	push ax
@@ -10114,7 +10045,6 @@ _4E3E:
 	div word [bp-0x6]
 	mov ax,dx
 	add ax,[bp-0x4]
-	nop
 	mov [di+0x9],al
 	mov ax,si
 	mov sp,bp
@@ -10977,7 +10907,6 @@ _552B:
 	test dx,0x100
 	jz short _5543
 	jmp short _5541
-	nop
 _553B:
 	test dx,0x800
 	jz short _5543
@@ -12065,8 +11994,7 @@ _5C8C:
 ;------------------------------------------------------------------------------
 _5CA6:
 	push ds
-_5CA7:
-	mov ax,0x9b6
+	mov ax, SEG AGIDATA
 	mov ds,ax
 	mov word [0x176d],0x0
 	pop ds
@@ -12083,7 +12011,6 @@ _5CB4:
 	mov al,[di]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	sub ah,ah
 	push ax
@@ -12254,8 +12181,7 @@ IRQ1_INT9_KeyboardDataReady:
 	sti
 	push ds
 	push ax
-_5E4B:
-	mov ax,0x9b6
+	mov ax, SEG AGIDATA
 	mov ds,ax
 	mov ah,0x2
 	int 0x16
@@ -12298,7 +12224,6 @@ _5E82:
 	jnz short _5E97
 	mov word [0x12fb],0xffff
 	jmp short _5EA1
-	nop
 _5E97:
 	cmp al,0x4b
 	jnz short _5EC9
@@ -12334,7 +12259,6 @@ _5EB6:
 	out 0x20,al
 	pop ax
 	jmp short _5ECF
-	nop
 _5EC9:
 	pop ax
 	pushf
@@ -12668,14 +12592,12 @@ _6173:
 	in al,dx
 	test ch,al
 	jz short _617F
-	nop
 	cli
 	inc bh
 	jz short _61AA
 _617F:
 	test cl,al
 	jz short _6189
-	nop
 	cli
 	inc bl
 	jz short _61AA
@@ -13083,7 +13005,6 @@ _64B4:
 	shr ah,1
 	xor al,al
 	jmp short _64D6
-	nop
 _64CA:
 	mov cl,dh
 	mov [0x1551],dh
@@ -13756,7 +13677,6 @@ _69E9:
 	mov al,[bp-0x2]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	mov [di+0x1f],al
 	sub ah,ah
@@ -13898,7 +13818,6 @@ _6AF6:
 	mov al,[bp-0x4]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	mov [di+0x27],al
 	mov bx,si
@@ -13908,7 +13827,6 @@ _6AF6:
 	mov al,[bp-0x4]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	mov [di+0x28],al
 	mov al,[di+0x1e]
@@ -13918,7 +13836,6 @@ _6AF6:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	mov [bp-0x2],ax
@@ -14129,7 +14046,6 @@ _6CD3:
 	mov al,[bp-0x2]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	mov [di+0x1e],al
 	mov ax,si
@@ -14162,7 +14078,6 @@ _6D11:
 	mov al,[bp-0x2]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	mov [di+0x1],al
 	sub ah,ah
@@ -14197,7 +14112,6 @@ _6D53:
 	mov al,[bp-0x2]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	mov [di+0x21],al
 	mov ax,si
@@ -14228,7 +14142,6 @@ _6D91:
 	sub ah,ah
 	mov bx,ax
 	mov al,[di+0x21]
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	pop bp
@@ -14531,7 +14444,6 @@ _6FF3:
 	sub ah,ah
 	mov cx,ax
 	mov al,cl
-	nop
 	mov [di+0x9],al
 	mov ax,si
 	mov sp,bp
@@ -14552,7 +14464,6 @@ _7018:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	mov [bp-0x2],ax
@@ -14629,10 +14540,8 @@ _70B8:
 	xor bh,bh
 	lodsb
 	mov bl,al
-	nop
 	cmp byte [bx+0x9],0xff
 	jnc short _70C8
-	nop
 	inc byte [bx+0x9]
 _70C8:
 	mov ax,si
@@ -14642,10 +14551,8 @@ _70CB:
 	xor bh,bh
 	lodsb
 	mov bl,al
-	nop
 	cmp byte [bx+0x9],0x0
 	jz short _70DB
-	nop
 	dec byte [bx+0x9]
 _70DB:
 	mov ax,si
@@ -14656,7 +14563,6 @@ _70DE:
 	lodsb
 	mov bl,al
 	lodsb
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	ret
@@ -14667,9 +14573,7 @@ _70EB:
 	mov di,ax
 	lodsb
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
-	nop
 	mov [di+0x9],al
 	mov ax,si
 	ret
@@ -14679,7 +14583,6 @@ _70FE:
 	lodsb
 	mov bl,al
 	lodsb
-	nop
 	add [bx+0x9],al
 	mov ax,si
 	ret
@@ -14690,9 +14593,7 @@ _710B:
 	mov di,ax
 	lodsb
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
-	nop
 	add [di+0x9],al
 	mov ax,si
 	ret
@@ -14702,7 +14603,6 @@ _711E:
 	lodsb
 	mov bl,al
 	lodsb
-	nop
 	sub [bx+0x9],al
 	mov ax,si
 	ret
@@ -14713,9 +14613,7 @@ _712B:
 	mov di,ax
 	lodsb
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
-	nop
 	sub [di+0x9],al
 	mov ax,si
 	ret
@@ -14724,14 +14622,11 @@ _713E:
 	xor ah,ah
 	lodsb
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	mov di,ax
 	lodsb
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
-	nop
 	mov [di+0x9],al
 	mov ax,si
 	ret
@@ -14740,10 +14635,8 @@ _7157:
 	xor bh,bh
 	lodsb
 	mov bl,al
-	nop
 	mov bl,[bx+0x9]
 	lodsb
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	ret
@@ -14754,12 +14647,9 @@ _7168:
 	mov di,ax
 	lodsb
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
-	nop
 	mov [di+0x9],al
 	mov ax,si
 	ret
@@ -14768,11 +14658,9 @@ _7181:
 	xor bh,bh
 	lodsb
 	mov bl,al
-	nop
 	mov cl,[bx+0x9]
 	lodsb
 	mul cl
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	ret
@@ -14781,16 +14669,13 @@ _7194:
 	xor bh,bh
 	lodsb
 	mov bl,al
-	nop
 	mov cl,[bx+0x9]
 	push bx
 	lodsb
 	mov bl,al
-	nop
 	mov al,[bx+0x9]
 	mul cl
 	pop di
-	nop
 	mov [di+0x9],al
 	mov ax,si
 	ret
@@ -14800,13 +14685,11 @@ _71AF:
 	xor bh,bh
 	lodsb
 	mov bl,al
-	nop
 	mov ch,[bx+0x9]
 	lodsb
 	mov cl,al
 	mov al,ch
 	div cl
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	ret
@@ -14816,17 +14699,14 @@ _71C8:
 	xor bh,bh
 	lodsb
 	mov bl,al
-	nop
 	mov ch,[bx+0x9]
 	push bx
 	lodsb
 	mov bl,al
-	nop
 	mov cl,[bx+0x9]
 	mov al,ch
 	div cl
 	pop bx
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	ret
@@ -14853,7 +14733,6 @@ _71FC:
 	lodsb
 	xor bh,bh
 	mov bl,al
-	nop
 	mov al,[bx+0x9]
 	call _7251
 	mov ax,si
@@ -14863,7 +14742,6 @@ _720B:
 	lodsb
 	xor bh,bh
 	mov bl,al
-	nop
 	mov al,[bx+0x9]
 	call _7257
 	mov ax,si
@@ -14873,7 +14751,6 @@ _721A:
 	lodsb
 	xor bh,bh
 	mov bl,al
-	nop
 	mov al,[bx+0x9]
 	call _725F
 	mov ax,si
@@ -15016,7 +14893,6 @@ _72EF:
 	mov al,[bx]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	mov [si+0x2],al
 	mov ax,[bp+0x8]
@@ -15040,7 +14916,6 @@ _731A:
 	mov al,[bx]
 	sub ah,ah
 	mov di,ax
-	nop
 	mov al,[di+0x9]
 	mov [si+0x2],al
 	mov ax,[bp+0x8]
@@ -15065,7 +14940,6 @@ _7345:
 	sub ah,ah
 	mov di,ax
 	mov al,[si+0x2]
-	nop
 	mov [di+0x9],al
 	mov ax,[bp+0x8]
 	pop bp
@@ -15129,7 +15003,6 @@ _73C6:
 	mov al,[bp-0x4]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	mov [bp-0x2],al
 	mov al,[bp-0x2]
@@ -15737,7 +15610,6 @@ _782B:
 	sub ah,ah
 	mov bx,ax
 	mov al,[di+0x24]
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	pop bp
@@ -15769,7 +15641,6 @@ _785E:
 	mov al,[bp-0x2]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	mov [di+0x24],al
 	mov ax,si
@@ -15954,7 +15825,6 @@ _79AD:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	mov [di+0x16],ax
@@ -15964,7 +15834,6 @@ _79AD:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	mov [di+0x18],ax
@@ -15996,7 +15865,6 @@ _79FA:
 	sub ah,ah
 	mov bx,ax
 	mov ax,[di+0x3]
-	nop
 	mov [bx+0x9],al
 	mov bx,si
 	inc si
@@ -16004,7 +15872,6 @@ _79FA:
 	sub ah,ah
 	mov bx,ax
 	mov ax,[di+0x5]
-	nop
 	mov [bx+0x9],al
 	mov ax,si
 	pop bp
@@ -16034,7 +15901,6 @@ _7A3D:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	cbw
 	mov [bp-0x2],ax
@@ -16056,7 +15922,6 @@ _7A90:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	cbw
 	mov [bp-0x2],ax
@@ -16138,7 +16003,6 @@ _7B10:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	mov [di+0x3],ax
@@ -16147,7 +16011,6 @@ _7B10:
 	mov al,[bx]
 	sub ah,ah
 	mov bx,ax
-	nop
 	mov al,[bx+0x9]
 	sub ah,ah
 	mov [di+0x5],ax
@@ -16970,8 +16833,7 @@ _81BA:
 IRQ0_INT8_SystemTimer:
 	push ax
 	push ds
-_81BD:
-	mov ax,0x9b6
+	mov ax, SEG AGIDATA
 	mov ds,ax
 	cld
 	cmp word [0x11ec],byte +0x0
@@ -17003,13 +16865,12 @@ INT1C_SystemTimerTick:
 	push bp
 	push ds
 	push es
-_81F0:
-	mov ax,0x9b6
+	mov ax, SEG AGIDATA
 	mov ds,ax
 	mov es,ax
 	call _7C52
 	pushf
-	call far [0x1751]
+	call far [0x1751]			; call original INT 1C
 	mov si,[0x0]
 	cmp word [si],0xaaaa
 	jz short _8217
@@ -17031,7 +16892,7 @@ _8217:
 	iret
 
 _8222:
-	mov ax,0x9b6
+	mov ax, SEG AGIDATA
 	mov ds,ax
 	mov es,ax
 	mov ax,[0x0]
@@ -17057,8 +16918,7 @@ DisabledInterrupt:				; 8254
 
 INT24_CriticalErrorHandler:		; 8255
 	add sp,byte +0x6
-_8258:
-	mov ax,0x9b6
+	mov ax, SEG AGIDATA
 	mov ds,ax
 	and di,0xff
 	jnz short _8266
@@ -18091,7 +17951,6 @@ _8B56:
 	jmp short _8B82
 _8B78:
 	mov di,[bp-0xa]
-	nop
 	mov al,[di+0x9]
 	sub ah,ah
 	push ax
@@ -19403,7 +19262,6 @@ _99A5:
 	mov bp,di
 	xor cx,cx
 	jmp short _99DA
-	nop
 _99D7:
 	cbw
 	add di,ax
@@ -19480,17 +19338,15 @@ _9A4E:
 	ret
 
 
-	TIMES OFFSET_AGIDATA - 0x10 - ($-$$)	DB 0
-	DB	"----------------"
-
-
 
 
 ;==============================================================================
 ;							AGIDATA.OVL = CS + 9B6 = CS:9B60
 ;==============================================================================
+SEGMENT _DATA CLASS=DATA ALIGN=16
 AGIDATA:
-	DB	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
+	DW	0	; address LocalAlloc Stack 0xA00 bytes (here in data segment)
+	DB	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	DB	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	DB	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 	DB	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
@@ -20123,8 +19979,8 @@ AGIDATA_1552:
 	DB	0x45, 0x4E, 0x54, 0x45, 0x52, 0x20, 0x43, 0x4F, 0x4D, 0x4D, 0x41, 0x4E, 0x44, 0x00, 0x00, 0x00
 	DB	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 
-	DB	0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53
-	DB	0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53
+	DB	0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53	; 0x1C90
+	DB	0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53	; 0x1CA0
 	DB	0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53
 	DB	0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53
 	DB	0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53, 0x53
